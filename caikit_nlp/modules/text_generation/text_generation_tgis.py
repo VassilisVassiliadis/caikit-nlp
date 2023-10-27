@@ -139,15 +139,15 @@ class TextGenerationTGIS(ModuleBase):
         )
 
     @classmethod
-    def load(cls, model_path: str, load_backend: BackendBase) -> "TextGeneration":
+    def load(cls, model_path: Union[str, ModuleConfig], load_backend: BackendBase) -> "TextGeneration":
         """Function to load text-generation model. Note, this only loads
         "remote" style model, i.e the cakit-model that doesn't
         necessarily required to have actual artifacts in it
         and thus only saves them in "remote" format.
 
         Args:
-            model_path: str
-                Path to the model to be loaded.
+            model_path:
+                Path to the model to be loaded or the Model configuration
             load_backend: BackendBase
                 Backend object to be used to run inference with.
         Returns:
@@ -160,7 +160,10 @@ class TextGenerationTGIS(ModuleBase):
         tgis_backend = config.tgis_backend or load_backend
         artifacts_path = config.artifact_path
         if artifacts_path:
-            model_name = os.path.join(model_path, artifacts_path)
+            path_to_model_config = model_path
+            if isinstance(model_path, ModuleConfig):
+                path_to_model_config = model_path.model_path
+            model_name = os.path.join(path_to_model_config, artifacts_path)
             error.dir_check("<NLP01983374E>", model_name)
             log.debug("Loading with on-disk artifacts: %s", model_name)
         else:

@@ -443,14 +443,14 @@ class TextGeneration(ModuleBase):
     @classmethod
     def load(
         cls,
-        model_path: str,
+        model_path: Union[str, ModuleConfig],
         torch_dtype: str = None,
     ) -> "TextGeneration":
         """Function to load text-generation model
 
         Args:
-            model_path: str
-                Path to the model to be loaded.
+            model_path:
+                Path to the model to be loaded or the Model configuration
             torch_dtype: str
                 Torch data type to be used when loading the model.
         Returns:
@@ -468,7 +468,11 @@ class TextGeneration(ModuleBase):
         base_model_path = config.get("artifact_path")
         error.type_check("<NLP35174683E>", str, base_model_path=base_model_path)
 
-        base_model_path = os.path.join(model_path, base_model_path)
+        path_to_model_config = model_path
+        if isinstance(model_path, ModuleConfig):
+            path_to_model_config = model_path.model_path
+
+        base_model_path = os.path.join(path_to_model_config, base_model_path)
         error.dir_check("<NLP01983374E>", base_model_path)
         return cls.bootstrap(base_model_path, torch_dtype)
 

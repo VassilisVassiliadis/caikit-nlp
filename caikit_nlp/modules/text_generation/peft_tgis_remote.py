@@ -102,16 +102,16 @@ class PeftPromptTuningTGIS(ModuleBase):  # pylint: disable=too-many-instance-att
                 tgis_backend.unload_prompt_artifacts(prompt_cache_id)
 
     @classmethod
-    def load(cls, model_path: str, load_backend: BackendBase) -> "PeftPromptTuningTGIS":
+    def load(cls, model_path: Union[str, ModuleConfig], load_backend: BackendBase) -> "PeftPromptTuningTGIS":
         """Load a TGIS Peft Prompt Tuning distributed module. Note that we do not
         leverage artifacts stored within the model here, and we assume that the
         prompt vector is already available at a place that the TGIS server can pick it
         up.
 
         Args:
-            model_path: str
-                Path to the model to be loaded.
-            load_backend: BackendBase
+            model_path:
+                Path to the model to be loaded or the Model configuration
+            load_backend:
                 Backend object to be used to run inference with.
         Returns:
             PeftPromptTuningTGIS
@@ -119,9 +119,12 @@ class PeftPromptTuningTGIS(ModuleBase):  # pylint: disable=too-many-instance-att
         """
         error.type_check("<NLP85069377E>", TGISBackend, load_backend=load_backend)
         config = ModuleConfig.load(model_path)
+        path_to_model_config = model_path
+        if isinstance(model_path, ModuleConfig):
+            path_to_model_config = model_path.model_path
         eos_token = config.eos_token
         verbalizer = config.verbalizer
-        dir_name = os.path.basename(model_path)
+        dir_name = os.path.basename(path_to_model_config)
         # NOTE: base_model_name is used as "model_id" when calling to TGIS backend
         base_model_name = config.get("base_model_name", "")
         prompt_cache_id = dir_name
@@ -139,7 +142,7 @@ class PeftPromptTuningTGIS(ModuleBase):  # pylint: disable=too-many-instance-att
         # Get all the valid prompt artifact files so they can be loaded after
         # the connection is established
         prompt_artifacts = [
-            os.path.join(model_path, config.get(config_key))
+            os.path.join(path_to_model_config, config.get(config_key))
             for config_key in [
                 PeftPromptTuning._ENCODER_KEY.name,
                 PeftPromptTuning._DECODER_KEY.name,

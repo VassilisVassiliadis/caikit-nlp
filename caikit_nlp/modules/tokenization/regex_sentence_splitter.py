@@ -24,6 +24,8 @@ from caikit.interfaces.nlp.data_model import Token, TokenizationResults
 from caikit.interfaces.nlp.tasks import TokenizationTask
 import alog
 
+from typing import Union
+
 log = alog.use_channel("RGX_SNT_SPLT")
 error = error_handler.get(log)
 
@@ -84,18 +86,22 @@ class RegexSentenceSplitter(ModuleBase):
             module_saver.update_config(config_options)
 
     @classmethod
-    def load(cls, model_path: str) -> "RegexSentenceSplitter":
+    def load(cls, model_path: Union[str, ModuleConfig]) -> "RegexSentenceSplitter":
         """Load a regex sentence splitter model.
 
         Args:
-            model_path: str
-                Path to the model to be loaded.
+            model_path:
+                Path to the model to be loaded or the Model configuration
 
         Returns:
             RegexSentenceSplitter
                 Instance of this class built from the on disk model.
         """
-        config = ModuleConfig.load(os.path.abspath(model_path))
+        if isinstance(model_path, ModuleConfig):
+            config = model_path
+        else:
+            config = ModuleConfig.load(os.path.abspath(model_path))
+
         return cls(regex_str=config.regex_str)
 
     def run(self, text: str) -> TokenizationResults:
